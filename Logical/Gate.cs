@@ -15,49 +15,63 @@ namespace Logical
         public BitArray Input { get; set; }
         public bool Output { get; set; }
 
+        protected bool Dirty;
+
         protected Gate(int inputs)
         {
             VDD = false;
             Ground = true;
             Input = new BitArray(inputs, false);
             Output = false;
+            Dirty = false;
         }
 
         public Gate SetInputBit(int index, bool value)
         {
             if (index >= 0 && Input.Length > index)
             {
-                Input[index] = value;
+                if (Input[index] != value)
+                {
+                    Input[index] = value;
+                    Dirty = true;
+                }
             }
 
             return this;
         }
 
+        public bool GetUpdatedOutput() { return GetUpdatedOutput(-1, false); }
         public bool GetUpdatedOutput(int index, bool value)
         {
             Update(index, value);
             return Output;
         }
-        public virtual void Update(int index, bool value) { }
+        public void Update() { Update(-1, false); }
+        public void Update(int index, bool value) {
+            SetInputBit(index, value);
+
+            if (Dirty)
+            {
+                Dirty = false;
+                Output = GetOutput() && VDD && !Ground;
+            }
+        }
+
+        protected virtual bool GetOutput() { return false; }
     }
 
     public class ANDGate : Gate
     {
         public ANDGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            foreach (bool bit in Input)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output &= bit;
-                }
-                Output = output && VDD && !Ground;
+                output &= bit;
             }
+            return output;
         }
     }
 
@@ -65,19 +79,14 @@ namespace Logical
     {
         public NANDGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            foreach (bool bit in Input)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output &= bit;
-                }
-                Output = !output && VDD && !Ground;
+                output &= bit;
             }
+            return !output;
         }
     }
 
@@ -85,19 +94,14 @@ namespace Logical
     {
         public ORGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            foreach (bool bit in Input)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output |= bit;
-                }
-                Output = output && VDD && !Ground;
+                output |= bit;
             }
+            return output;
         }
     }
 
@@ -105,19 +109,14 @@ namespace Logical
     {
         public NORGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            foreach (bool bit in Input)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output |= bit;
-                }
-                Output = !output && VDD && !Ground;
+                output |= bit;
             }
+            return !output;
         }
     }
 
@@ -125,19 +124,14 @@ namespace Logical
     {
         public XORGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            for (int i = 1; i < Input.Length; i++)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output ^= bit;
-                }
-                Output = output && VDD && !Ground;
+                output ^= Input[i];
             }
+            return output;
         }
     }
 
@@ -145,19 +139,14 @@ namespace Logical
     {
         public XNORGate() : base(2) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
+            bool output = Input[0];
+            for (int i = 1; i < Input.Length; i++)
             {
-                Input[index] = value;
-
-                bool output = Input[0];
-                foreach (bool bit in Input)
-                {
-                    output ^= bit;
-                }
-                Output = !output && VDD && !Ground;
+                output ^= Input[i];
             }
+            return !output;
         }
     }
 
@@ -165,13 +154,9 @@ namespace Logical
     {
         public BufferGate() : base(1) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
-            {
-                Input[index] = value;
-                Output = value && VDD && !Ground;
-            }
+            return Input[0];
         }
     }
 
@@ -179,13 +164,9 @@ namespace Logical
     {
         public NotGate() : base(1) { }
 
-        public override void Update(int index, bool value)
+        protected override bool GetOutput()
         {
-            if (index >= 0 && Input.Length > index)
-            {
-                Input[index] = value;
-                Output = !value && VDD && !Ground;
-            }
+            return !Input[0];
         }
     }
 }

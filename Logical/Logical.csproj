@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Chip.cs" />
     <Compile Include="Gate.cs" />
+    <Compile Include="IC.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

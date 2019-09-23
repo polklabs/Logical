@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections;
+using Gates;
+using Chips;
+using Components;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Logical
 {
@@ -11,82 +12,95 @@ namespace Logical
     {
         static void Main(string[] args)
         {
+            FlipFlopTest();
 
-            AND4Chip testGate = new AND4Chip()
+            double dd = 0;
+            BaseComponent testCircuit = new Test3();
+            //Chip testCircuit = new TestChip3();
+            testCircuit.SetVDD(true);
+            testCircuit.SetGround(false);
+            //testCircuit.ResetGround();
+
+            int maxBits = 4;
+            for(int i = 0; i < Math.Pow(2,maxBits); i++)
             {
-                Ground = false,
-                VDD = true
-            };
+                string binary = Convert.ToString(i, 2);
 
-            // BUFFER
-            //Console.WriteLine("0" + testGate.GetUpdatedOutput());
+                while(binary.Length < maxBits)
+                {
+                    binary = "0" + binary;
+                }
 
-            //testGate.SetInputBit(0, true);
-            //Console.WriteLine("1" + testGate.GetUpdatedOutput());
+                BitArray bitArray = new BitArray(binary.Select(c => c == '1').ToArray());
 
-            //2 INPUT GATES
-            //Console.WriteLine("0 0 " + testGate.Output);
+                //testCircuit.SetInputBits(bitArray);
+                testCircuit.SetBits(bitArray);
 
-            //testGate.SetInputBit(0, false).SetInputBit(1, true);
-            //Console.WriteLine("0 1 " + testGate.GetUpdatedOutput());
+                var watch = System.Diagnostics.Stopwatch.StartNew();                
 
-            //testGate.SetInputBit(0, true).SetInputBit(1, false);
-            //Console.WriteLine("1 0 " + testGate.GetUpdatedOutput());
+                testCircuit.Update();
 
-            //testGate.SetInputBit(0, true).SetInputBit(1, true);
-            //Console.WriteLine("1 1 " + testGate.GetUpdatedOutput());
+                watch.Stop();                
+                
+                for(int j = 0; j < maxBits; j++)
+                {
+                    Console.Write(binary[j] + " ");                    
+                }
 
-            //CHIP
-            Console.WriteLine("0 0 0 0 " + testGate.Output);
+                Console.Write("=> ");
 
-            testGate.SetInputBit(0, false).SetInputBit(1, false).SetInputBit(2, false).SetInputBit(3, true);
-            Console.WriteLine("0 0 0 1 " + testGate.GetUpdatedOutput());
+                // For testing chips
+                for(int j = 0; j < testCircuit.Pins.Length; j++)
+                {
+                    Console.Write(testCircuit.Pins[j] ? "1 " : "0 ");
+                }
 
-            testGate.SetInputBit(0, false).SetInputBit(1, false).SetInputBit(2, true).SetInputBit(3, false);
-            Console.WriteLine("0 0 1 0 " + testGate.GetUpdatedOutput());
+                Console.Write(" - " + (watch.Elapsed.TotalMilliseconds * 1000).ToString() + "us");
+                dd += (watch.Elapsed.TotalMilliseconds * 1000);
 
-            testGate.SetInputBit(0, false).SetInputBit(1, false).SetInputBit(2, true).SetInputBit(3, true);
-            Console.WriteLine("0 0 1 1 " + testGate.GetUpdatedOutput());
+                //For testing gates
+                // Console.Write(testCircuit.Output);
 
-            testGate.SetInputBit(0, false).SetInputBit(1, true).SetInputBit(2, false).SetInputBit(3, false);
-            Console.WriteLine("0 1 0 0 " + testGate.GetUpdatedOutput());
+                Console.WriteLine("");
 
-            testGate.SetInputBit(0, false).SetInputBit(1, true).SetInputBit(2, false).SetInputBit(3, true);
-            Console.WriteLine("0 1 0 1 " + testGate.GetUpdatedOutput());
+            }
 
-            testGate.SetInputBit(0, false).SetInputBit(1, true).SetInputBit(2, true).SetInputBit(3, false);
-            Console.WriteLine("0 1 1 0 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, false).SetInputBit(1, true).SetInputBit(2, true).SetInputBit(3, true);
-            Console.WriteLine("0 1 1 1 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, false).SetInputBit(2, false).SetInputBit(3, false);
-            Console.WriteLine("1 0 0 0 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, false).SetInputBit(2, false).SetInputBit(3, true);
-            Console.WriteLine("1 0 0 1 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, false).SetInputBit(2, true).SetInputBit(3, false);
-            Console.WriteLine("1 0 1 0 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, false).SetInputBit(2, true).SetInputBit(3, true);
-            Console.WriteLine("1 0 1 1 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, true).SetInputBit(2, false).SetInputBit(3, false);
-            Console.WriteLine("1 1 0 0 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, true).SetInputBit(2, false).SetInputBit(3, true);
-            Console.WriteLine("1 1 0 1 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, true).SetInputBit(2, true).SetInputBit(3, false);
-            Console.WriteLine("1 1 1 0 " + testGate.GetUpdatedOutput());
-
-            testGate.SetInputBit(0, true).SetInputBit(1, true).SetInputBit(2, true).SetInputBit(3, true);
-            Console.WriteLine("1 1 1 1 " + testGate.GetUpdatedOutput());
-
+            Console.WriteLine("Average: " + (dd / Math.Pow(2, maxBits)).ToString() + "us");
+            
             Console.Write("Press any key to exit...");
             Console.ReadKey();
         }
+
+        public static void FlipFlopTest()
+        {
+            Chip testCircuit = new FlipFlop();
+            testCircuit.SetVDD(true); 
+            testCircuit.SetGround(false);
+
+            Console.WriteLine("S R | Q     Q'   ");
+
+            testCircuit.SetInputBit(1, true).SetInputBit(0, false);
+            testCircuit.Update();
+            Console.WriteLine("1 0 | " + testCircuit.Output[0] + " " + testCircuit.Output[1]);
+
+            testCircuit.SetInputBit(1, true).SetInputBit(0, true);
+            testCircuit.Update();
+            Console.WriteLine("1 1 | " + testCircuit.Output[0] + " " + testCircuit.Output[1]);
+
+            testCircuit.SetInputBit(1, false).SetInputBit(0, true);
+            testCircuit.Update();
+            Console.WriteLine("0 1 | " + testCircuit.Output[0] + " " + testCircuit.Output[1]);
+
+            testCircuit.SetInputBit(1, true).SetInputBit(0, true);
+            testCircuit.Update();
+            Console.WriteLine("1 1 | " + testCircuit.Output[0] + " " + testCircuit.Output[1]);
+
+            testCircuit.SetInputBit(1, false).SetInputBit(0, false);
+            testCircuit.Update();
+            Console.WriteLine("0 0 | " + testCircuit.Output[0] + " " + testCircuit.Output[1]);
+
+        }
+
     }
 
 }

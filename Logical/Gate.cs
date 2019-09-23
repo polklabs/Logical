@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
-namespace Logical
+namespace Gates
 {
     public class Gate
     {
+        public Guid ID { get; set; }
 
         public bool VDD { get; set; }
         public bool Ground { get; set; }
@@ -19,6 +17,8 @@ namespace Logical
 
         protected Gate(int inputs)
         {
+            ID = Guid.NewGuid();
+
             VDD = false;
             Ground = true;
             Input = new BitArray(inputs, false);
@@ -26,35 +26,60 @@ namespace Logical
             Dirty = false;
         }
 
+        public bool IsDirty()
+        {
+            return Dirty;
+        }
+
+        public void SetVDD(bool value)
+        {
+            VDD = value;
+            Update();
+        }
+        public void SetGround(bool value)
+        {
+            Ground = value;
+            Update();
+        }
+
         public Gate SetInputBit(int index, bool value)
         {
             if (index >= 0 && Input.Length > index)
             {
-                if (Input[index] != value)
+                Input[index] = value;
+            }
+
+            return this;
+        }
+        public Gate SetInputBits(BitArray input)
+        {
+            if (input.Length == Input.Length)
+            {
+                for(int i = 0; i < input.Length; i++)
                 {
-                    Input[index] = value;
-                    Dirty = true;
+                    SetInputBit(i, input[i]);
                 }
             }
 
             return this;
         }
 
-        public bool GetUpdatedOutput() { return GetUpdatedOutput(-1, false); }
-        public bool GetUpdatedOutput(int index, bool value)
+        public bool Update()
         {
-            Update(index, value);
-            return Output;
-        }
-        public void Update() { Update(-1, false); }
-        public void Update(int index, bool value) {
-            SetInputBit(index, value);
+            bool oldOutput = Output;
 
-            if (Dirty)
+            if (!VDD || Ground)
             {
-                Dirty = false;
-                Output = GetOutput() && VDD && !Ground;
+                Output = false;
             }
+            else
+            {
+                Output = GetOutput();
+            }            
+
+            Dirty = oldOutput != Output;
+
+            return Output;
         }
 
         protected virtual bool GetOutput() { return false; }
@@ -62,6 +87,7 @@ namespace Logical
 
     public class ANDGate : Gate
     {
+        public ANDGate(int inputs) : base(inputs) { }
         public ANDGate() : base(2) { }
 
         protected override bool GetOutput()
@@ -77,6 +103,7 @@ namespace Logical
 
     public class NANDGate : Gate
     {
+        public NANDGate(int inputs) : base(inputs) { }
         public NANDGate() : base(2) { }
 
         protected override bool GetOutput()
@@ -88,10 +115,11 @@ namespace Logical
             }
             return !output;
         }
-    }
+    }    
 
     public class ORGate : Gate
     {
+        public ORGate(int inputs) : base(inputs) { }
         public ORGate() : base(2) { }
 
         protected override bool GetOutput()
@@ -107,6 +135,7 @@ namespace Logical
 
     public class NORGate : Gate
     {
+        public NORGate(int inputs) : base(inputs) { }
         public NORGate() : base(2) { }
 
         protected override bool GetOutput()
@@ -122,6 +151,7 @@ namespace Logical
 
     public class XORGate : Gate
     {
+        public XORGate(int inputs) : base(inputs) { }
         public XORGate() : base(2) { }
 
         protected override bool GetOutput()
@@ -137,6 +167,7 @@ namespace Logical
 
     public class XNORGate : Gate
     {
+        public XNORGate(int inputs) : base(inputs) { }
         public XNORGate() : base(2) { }
 
         protected override bool GetOutput()
